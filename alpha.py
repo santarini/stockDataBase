@@ -42,18 +42,23 @@ def dataRequest(batchReq):
 # jsonParsetoCSV takes the resulting JSON load from dataRequest and parses it
         
 def jsonParsetoCSV(jsonLoad, CurrentTicker):
-    with open('StockDatabase/'+ str(CurrentTicker) + '.csv', 'a', encoding="utf-8") as csvfileA:
-        fieldnames = ['Date','Time','Price', 'Volume', 'MktCap','SharesOut', 'SharesFloat']
-        writer = csv.DictWriter(csvfileA, fieldnames=fieldnames, lineterminator = '\n')
-        #to initialize database uncomment writeheader
-        #writer.writeheader()
-        latestTime = jsonLoad[CurrentTicker]['quote']['latestTime']
-        latestPrice = jsonLoad[CurrentTicker]['quote']['latestPrice']
-        latestVolume = jsonLoad[CurrentTicker]['quote']['latestVolume']
-        marketcap = jsonLoad[CurrentTicker]['stats']['marketcap']
-        sharesOutstanding = jsonLoad[CurrentTicker]['stats']['sharesOutstanding']
-        sharesFloat = jsonLoad[CurrentTicker]['stats']['float']
-        writer.writerow({'Date': datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d"),'Time': datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S.%f %Z"),'Price': str(latestPrice), 'Volume': str(latestVolume), 'MktCap': str(marketcap),'SharesOut': str(sharesOutstanding), 'SharesFloat': str(sharesFloat)})
+        try:
+                with open('StockDatabase/'+ str(CurrentTicker) + '.csv', 'a', encoding="utf-8") as csvfileA:
+                        fieldnames = ['Date','Time','Price', 'Volume', 'MktCap','SharesOut', 'SharesFloat']
+                        writer = csv.DictWriter(csvfileA, fieldnames=fieldnames, lineterminator = '\n')
+                        #to initialize database uncomment writeheader
+                        #writer.writeheader()
+                        latestTime = jsonLoad[CurrentTicker]['quote']['latestTime']
+                        latestPrice = jsonLoad[CurrentTicker]['quote']['latestPrice']
+                        latestVolume = jsonLoad[CurrentTicker]['quote']['latestVolume']
+                        marketcap = jsonLoad[CurrentTicker]['stats']['marketcap']
+                        sharesOutstanding = jsonLoad[CurrentTicker]['stats']['sharesOutstanding']
+                        sharesFloat = jsonLoad[CurrentTicker]['stats']['float']
+                        writer.writerow({'Date': datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d"),'Time': datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S.%f %Z"),'Price': str(latestPrice), 'Volume': str(latestVolume), 'MktCap': str(marketcap),'SharesOut': str(sharesOutstanding), 'SharesFloat': str(sharesFloat)})
+        except KeyError:
+                with open('ErrorLog.txt', 'a', encoding="utf-8") as errorLog:
+                        errorLog.write(str(CurrentTicker) + ', \n')
+                        errorLog.close
 
 #start a timer for program so we can see how long it takes
         
@@ -72,19 +77,19 @@ with open("nyselist.csv", encoding='utf-8') as csvfile:
     QtyHundreds = tickerCount/100
     i = 0
 
-    #If there are more than 100 tickers, dice them up into 100 ticker batches
+    #If there are more than 100 tickers, give me the first 100 tickers and all the remaining tickers in 100 ticker batches
 
     if QtyHundreds > 1:
         j = 100
         while QtyHundreds > 1:
             for ticker in allTickers[i:j]:
                 for innerStr in ticker:
-                    batch.append(innerStr)
+                    batch.append(innerStr.strip())
             batchReq = ",".join(batch)
             jsonLoad = dataRequest(batchReq)
             for ticker in allTickers[i:j]:
                 for innerStr in ticker:
-                    CurrentTicker = innerStr
+                    CurrentTicker = innerStr.strip()
                     jsonParsetoCSV(jsonLoad, CurrentTicker)
             i = i + 100
             j = j + 100
@@ -98,12 +103,12 @@ with open("nyselist.csv", encoding='utf-8') as csvfile:
     if QtyHundreds <= 1:
         for ticker in allTickers[i:tickerCount]:
             for innerStr in ticker:
-                batch.append(innerStr)
+                batch.append(innerStr.strip())
         batchReq = ",".join(batch)
         jsonLoad = dataRequest(batchReq)
         for ticker in allTickers[i:tickerCount]:
             for innerStr in ticker:
-                CurrentTicker = innerStr
+                CurrentTicker = innerStr.strip()
                 jsonParsetoCSV(jsonLoad, CurrentTicker)
                 i = i + 1
     elapsed_time = time.time() - start_time              
