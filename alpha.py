@@ -38,7 +38,6 @@ def dataRequest(batchReq):
         response = requests.get('https://api.iextrading.com/1.0/stock/market/batch?symbols=' + str(batchReq)+ '&types=quote,stats')
         jsonLoad = json.loads(response.text)
         return jsonLoad
-        #jsonParsetoCSV(jsonLoad, CurrentTicker)
 
 # jsonParsetoCSV takes the resulting JSON load from dataRequest and parses it
         
@@ -66,7 +65,7 @@ if not os.path.exists('StockDatabase'):
 
 #open csv containing tickers
 
-with open("AmericanTickers.csv", encoding='utf-8') as csvfile:
+with open("nyselist.csv", encoding='utf-8') as csvfile:
     reader = csv.reader(csvfile)
     allTickers = list(reader)
     tickerCount = len(allTickers)
