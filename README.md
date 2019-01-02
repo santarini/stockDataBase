@@ -9,7 +9,7 @@ Fetched 6294 tickers in 56.782 seconds. Average 110.85 tickers per second.
 
 
 ## To Do
-- [ ] Strip() spaces from input tickers
+- [x] Strip() spaces from input tickers
 - [ ] Error handling for tickers not tracked by iEX
 - [ ] If ticker file exists append
 - [ ] Make it so script can execute with column headers and other columns present
