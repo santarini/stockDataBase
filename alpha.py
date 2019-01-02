@@ -11,7 +11,7 @@ import json
 
 batch = []
 
-CurrentTicker = "AAPL"
+# batch request makes the actual batch request to iex and returns JSON
 
 def dataRequest(batchReq):
         response = requests.get('https://api.iextrading.com/1.0/stock/market/batch?symbols=' + str(batchReq)+ '&types=quote,stats')
@@ -19,6 +19,8 @@ def dataRequest(batchReq):
         return jsonLoad
         #jsonParsetoCSV(jsonLoad, CurrentTicker)
 
+# jsonParsetoCSV takes the resulting JSON load from dataRequest and parses it
+        
 def jsonParsetoCSV(jsonLoad, CurrentTicker):
     with open('StockDatabase/'+ str(CurrentTicker) + '.csv', 'a', encoding="utf-8") as csvfileA:
         fieldnames = ['Date','Time','Price', 'Volume', 'MktCap','SharesOut', 'SharesFloat']
@@ -33,11 +35,15 @@ def jsonParsetoCSV(jsonLoad, CurrentTicker):
         sharesFloat = jsonLoad[CurrentTicker]['stats']['float']
         writer.writerow({'Date': datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d"),'Time': datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S.%f %Z"),'Price': str(latestPrice), 'Volume': str(latestVolume), 'MktCap': str(marketcap),'SharesOut': str(sharesOutstanding), 'SharesFloat': str(sharesFloat)})
 
+#start a timer for program so we can see how long it takes
+        
 start_time = time.time()
 
 #create source folder if it doesnt exist yet
 if not os.path.exists('StockDatabase'):
     os.makedirs('StockDatabase')
+
+#open csv containing tickers
 
 with open("AmericanTickers.csv", encoding='utf-8') as csvfile:
     reader = csv.reader(csvfile)
@@ -45,6 +51,9 @@ with open("AmericanTickers.csv", encoding='utf-8') as csvfile:
     tickerCount = len(allTickers)
     QtyHundreds = tickerCount/100
     i = 0
+
+    #If there are more than 100 tickers, dice them up into 100 ticker batches
+
     if QtyHundreds > 1:
         j = 100
         while QtyHundreds > 1:
@@ -63,7 +72,9 @@ with open("AmericanTickers.csv", encoding='utf-8') as csvfile:
             batch = []
             elapsed_time = time.time() - start_time
             print(str(i) + " of " + str(tickerCount) + " tickers completed. " + str(round(i/tickerCount * 100, 2)) + "% complete. " + str(round(elapsed_time, 3))  + " seconds elapsed.")
-                  
+    
+    #If there are less than 100 tickers perform a batch request
+
     if QtyHundreds <= 1:
         for ticker in allTickers[i:tickerCount]:
             for innerStr in ticker:
@@ -77,6 +88,8 @@ with open("AmericanTickers.csv", encoding='utf-8') as csvfile:
                 i = i + 1
     elapsed_time = time.time() - start_time              
     print(str(i) + " of " + str(tickerCount) + " tickers completed. " + str(round(i/tickerCount * 100, 2)) + "% complete. " + str(round(elapsed_time, 3))  + " seconds elapsed.")
+
+#stop timer
 
 elapsed_time = time.time() - start_time
 print("Program completed in "+ str(round(elapsed_time, 3)) + " seconds. " + str(round(i/tickerCount * 100, 2)) + "% complete.")
