@@ -13,6 +13,7 @@ Fetched 6294 tickers in 56.782 seconds. Average 110.85 tickers per second.
 - [ ] Error handling for tickers not tracked by iEX
 - [ ] If ticker file exists append
 - [ ] Make it so script can execute with column headers and other columns present
+- [ ] Code comments so it's clearer what the hell is going on where
 
 
 ## Tickersets
