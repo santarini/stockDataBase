@@ -8,6 +8,11 @@ Work computer test:
 Fetched 6294 tickers in 56.782 seconds. Average 110.85 tickers per second.
 
 
+## To Do
+- [ ] Strip() spaces from input tickers
+- [ ] Error handling for tickers not tracked by iEX
+
+
 ## Tickersets
 
 The <a href="http://www.nasdaq.com/screening/company-list.aspx">NASDAQ website</a> does a great job of maintaining up-to-date CSVs containing all the tickers listed on the NYSE, NASDAQ, or AMEX.
