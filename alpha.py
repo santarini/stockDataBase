@@ -1,3 +1,24 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+'''
+This script takes a CSV containing stock tickers, creates a filesystem with a directory for each ticker if does not already exist 
+counts the number of tickers in the csv, puts them all in a list, slices the aggregate ticker list into 100 ticker batches,
+converts a batch to a string, inserts that string into a url request for the iEX api to fetch realtime pricing and volume data.
+iEX then returns a JSON load, the script parses the JSON load and populates the ticker file system.
+'''
+
+###############
+__author__ = "Makoa Santarini"
+__copyright__ = "Copyright 2018"
+__credits__ = ["Makoa Santarini"]
+__license__ = "GPL"
+__version__ = "1.0.1"
+__maintainer__ = "Makoa Santarini"
+__email__ = "makoa@makoasystems.com"
+__status__ = "Production"
+###################
+
 import csv
 import itertools
 from itertools import zip_longest
