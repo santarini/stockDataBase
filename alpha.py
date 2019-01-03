@@ -26,6 +26,7 @@ import re
 import os
 import time
 import datetime
+import pandas
 import pandas_datareader.data as web
 import requests
 import json
@@ -43,22 +44,32 @@ def dataRequest(batchReq):
         
 def jsonParsetoCSV(jsonLoad, CurrentTicker):
         try:
-                with open('StockDatabase/'+ str(CurrentTicker) + '.csv', 'a', encoding="utf-8") as csvfileA:
-                        fieldnames = ['Date','Time','Price', 'Volume', 'MktCap','SharesOut', 'SharesFloat']
-                        writer = csv.DictWriter(csvfileA, fieldnames=fieldnames, lineterminator = '\n')
-                        #to initialize database uncomment writeheader
-                        #writer.writeheader()
-                        latestTime = jsonLoad[CurrentTicker]['quote']['latestTime']
-                        latestPrice = jsonLoad[CurrentTicker]['quote']['latestPrice']
-                        latestVolume = jsonLoad[CurrentTicker]['quote']['latestVolume']
-                        marketcap = jsonLoad[CurrentTicker]['stats']['marketcap']
-                        sharesOutstanding = jsonLoad[CurrentTicker]['stats']['sharesOutstanding']
-                        sharesFloat = jsonLoad[CurrentTicker]['stats']['float']
-                        writer.writerow({'Date': datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d"),'Time': datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S.%f %Z"),'Price': str(latestPrice), 'Volume': str(latestVolume), 'MktCap': str(marketcap),'SharesOut': str(sharesOutstanding), 'SharesFloat': str(sharesFloat)})
+            latestTime = jsonLoad[CurrentTicker]['quote']['latestTime']
+            latestPrice = jsonLoad[CurrentTicker]['quote']['latestPrice']
+            latestVolume = jsonLoad[CurrentTicker]['quote']['latestVolume']
+            marketcap = jsonLoad[CurrentTicker]['stats']['marketcap']
+            sharesOutstanding = jsonLoad[CurrentTicker]['stats']['sharesOutstanding']
+            sharesFloat = jsonLoad[CurrentTicker]['stats']['float']
+
+            #create source csv if it doesnt exist yet
+            if not os.path.exists('StockDatabase/'+ str(CurrentTicker) + '.csv'):
+                with open('StockDatabase/'+ str(CurrentTicker) + '.csv', 'w', encoding="utf-8") as csvfileA:
+                    fieldnames = ['Date','Time','Price', 'Volume', 'MktCap','SharesOut', 'SharesFloat']
+                    writer = csv.DictWriter(csvfileA, fieldnames=fieldnames, lineterminator = '\n')
+                    writer.writeheader()
+                    csvfileA.close()
+
+            #write data to csv
+            with open('StockDatabase/'+ str(CurrentTicker) + '.csv', 'a', encoding="utf-8") as csvfileA:
+                fieldnames = ['Date','Time','Price', 'Volume', 'MktCap','SharesOut', 'SharesFloat']
+                writer = csv.DictWriter(csvfileA, fieldnames=fieldnames, lineterminator = '\n')
+                writer.writerow({'Date': datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d"),'Time': datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S.%f %Z"),'Price': str(latestPrice), 'Volume': str(latestVolume), 'MktCap': str(marketcap),'SharesOut': str(sharesOutstanding), 'SharesFloat': str(sharesFloat)})
+                csvfileA.close()
+
         except KeyError:
-                with open('ErrorLog.txt', 'a', encoding="utf-8") as errorLog:
-                        errorLog.write(str(CurrentTicker) + ', \n')
-                        errorLog.close
+            with open('ErrorLog.txt', 'a', encoding="utf-8") as errorLog:
+                    errorLog.write(str(CurrentTicker) + ', \n')
+                    errorLog.close()
 
 #start a timer for program so we can see how long it takes
         
@@ -70,49 +81,50 @@ if not os.path.exists('StockDatabase'):
 
 #open csv containing tickers
 
-with open("nyselist.csv", encoding='utf-8') as csvfile:
-    reader = csv.reader(csvfile)
-    allTickers = list(reader)
-    tickerCount = len(allTickers)
-    QtyHundreds = tickerCount/100
-    i = 0
+#read the csv file
+ticker_df = pandas.read_csv('nasdaqList.csv')
+#get all of the tickers and put them in a list
+allTickers = list(ticker_df['Symbol'].values)
+#get the lenght of the list
+tickerCount = len(ticker_df['Symbol'].values)
+#figure out the number of hundreds in the list
+QtyHundreds = tickerCount/100
+i = 0
 
-    #If there are more than 100 tickers, give me the first 100 tickers and all the remaining tickers in 100 ticker batches
+#If there are more than 100 tickers, give me the first 100 tickers and all the remaining tickers in 100 ticker batches
 
-    if QtyHundreds > 1:
-        j = 100
-        while QtyHundreds > 1:
-            for ticker in allTickers[i:j]:
-                for innerStr in ticker:
-                    batch.append(innerStr.strip())
-            batchReq = ",".join(batch)
-            jsonLoad = dataRequest(batchReq)
-            for ticker in allTickers[i:j]:
-                for innerStr in ticker:
-                    CurrentTicker = innerStr.strip()
-                    jsonParsetoCSV(jsonLoad, CurrentTicker)
-            i = i + 100
-            j = j + 100
-            QtyHundreds = QtyHundreds - 1
-            batch = []
-            elapsed_time = time.time() - start_time
-            print(str(i) + " of " + str(tickerCount) + " tickers completed. " + str(round(i/tickerCount * 100, 2)) + "% complete. " + str(round(elapsed_time, 3))  + " seconds elapsed.")
-    
-    #If there are less than 100 tickers perform a batch request
-
-    if QtyHundreds <= 1:
-        for ticker in allTickers[i:tickerCount]:
-            for innerStr in ticker:
-                batch.append(innerStr.strip())
+if QtyHundreds > 1:
+    j = 100
+    while QtyHundreds > 1:
+        for ticker in allTickers[i:j]:
+            batch.append(ticker.strip())
         batchReq = ",".join(batch)
         jsonLoad = dataRequest(batchReq)
-        for ticker in allTickers[i:tickerCount]:
-            for innerStr in ticker:
-                CurrentTicker = innerStr.strip()
-                jsonParsetoCSV(jsonLoad, CurrentTicker)
-                i = i + 1
-    elapsed_time = time.time() - start_time              
-    print(str(i) + " of " + str(tickerCount) + " tickers completed. " + str(round(i/tickerCount * 100, 2)) + "% complete. " + str(round(elapsed_time, 3))  + " seconds elapsed.")
+        for ticker in allTickers[i:j]:
+            batch.append(ticker.strip())
+            CurrentTicker = ticker.strip()
+            jsonParsetoCSV(jsonLoad, CurrentTicker)
+        i = i + 100
+        j = j + 100
+        QtyHundreds = QtyHundreds - 1
+        batch = []
+        elapsed_time = time.time() - start_time
+        print(str(i) + " of " + str(tickerCount) + " tickers completed. " + str(round(i/tickerCount * 100, 2)) + "% complete. " + str(round(elapsed_time, 3))  + " seconds elapsed.")
+
+#If there are less than 100 tickers perform a batch request
+
+if QtyHundreds <= 1:
+    for ticker in allTickers[i:j]:
+        batch.append(ticker.strip())
+    batchReq = ",".join(batch)
+    jsonLoad = dataRequest(batchReq)
+    for ticker in allTickers[i:j]:
+        batch.append(ticker.strip())
+        CurrentTicker = ticker.strip()
+        jsonParsetoCSV(jsonLoad, CurrentTicker)
+        i = i + 1
+elapsed_time = time.time() - start_time              
+print(str(i) + " of " + str(tickerCount) + " tickers completed. " + str(round(i/tickerCount * 100, 2)) + "% complete. " + str(round(elapsed_time, 3))  + " seconds elapsed.")
 
 #stop timer
 
