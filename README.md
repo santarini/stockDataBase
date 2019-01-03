@@ -7,13 +7,19 @@ Work computer test:
 
 Fetched 6294 tickers in 56.782 seconds. Average 110.85 tickers per second.
 
+## Phase 1
+
+### Version 1
+
+###### Update 1: Make a program that fetches financial data and puts it into a database
 
 ## To Do
 - [x] Strip() spaces from input tickers
 - [x] Error handling for tickers not tracked by iEX
-- [ ] If ticker file exists append existing file, else create new
+- [x] If ticker file exists append existing file, else create new with headers
 - [x] Make it so script can execute with column headers and other columns present
 - [x] Code comments so it's clearer what the hell is going on where
+- [ ]
 
 
 ## Tickersets
